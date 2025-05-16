@@ -1,0 +1,14 @@
+{
+  "token":"MTM3MjU4NjU2NTc1ODM1MzU2MQ.G5NGOh.mT0456V6Gt6WOXNBQX3N5hUYzoIaiN7PETdE1A",
+  "prefix": "!",
+  "ownerId": "ID_Discord_Cua_Ban",
+  "welcomeChannelId": "1372618603249139743",
+  "goodbyeChannelId": "1372618603249139743",
+  "memoryLimit": 256,
+  "cacheSettings": {
+    "messageCacheMaxSize": 50,
+    "messageCacheLifetime": 300,
+    "messageSweepInterval": 600
+  },
+  "encodedToken": null
+}

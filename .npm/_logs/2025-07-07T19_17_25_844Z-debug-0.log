@@ -1,0 +1,36 @@
+0 verbose cli /usr/local/bin/node /usr/local/bin/npm
+1 info using npm@11.4.2
+2 info using node@v24.3.0
+3 silly config load:file:/usr/local/lib/node_modules/npm/npmrc
+4 silly config load:file:/home/container/.npmrc
+5 silly config load:file:/usr/local/etc/npmrc
+6 verbose title npm install
+7 verbose argv "install"
+8 verbose logfile logs-max:10 dir:/home/container/.npm/_logs/2025-07-07T19_17_25_844Z-
+9 verbose logfile /home/container/.npm/_logs/2025-07-07T19_17_25_844Z-debug-0.log
+10 silly logfile done cleaning log files
+11 silly packumentCache heap:271581184 maxSize:67895296 maxEntrySize:33947648
+12 verbose stack JSONParseError: Expected double-quoted property name in JSON at position 297 (line 16 column 3) while parsing near "...xios\": \"^1.10.0\",\n  }\n}\n"
+12 verbose stack     at /usr/local/lib/node_modules/npm/node_modules/read-package-json-fast/lib/index.js:7:61
+12 verbose stack     at async #initTree (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:269:21)
+12 verbose stack     at async Arborist.buildIdealTree (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/build-ideal-tree.js:179:7)
+12 verbose stack     at async Promise.all (index 1)
+12 verbose stack     at async Arborist.reify (/usr/local/lib/node_modules/npm/node_modules/@npmcli/arborist/lib/arborist/reify.js:131:5)
+12 verbose stack     at async Install.exec (/usr/local/lib/node_modules/npm/lib/commands/install.js:149:5)
+12 verbose stack     at async Npm.exec (/usr/local/lib/node_modules/npm/lib/npm.js:208:9)
+12 verbose stack     at async module.exports (/usr/local/lib/node_modules/npm/lib/cli/entry.js:67:5)
+13 error code EJSONPARSE
+14 error path /home/container/package.json
+15 error JSON.parse Expected double-quoted property name in JSON at position 297 (line 16 column 3) while parsing near "...xios\": \"^1.10.0\",\n  }\n}\n"
+16 error JSON.parse Failed to parse JSON data.
+16 error JSON.parse Note: package.json must be actual JSON, not just JavaScript.
+17 silly unfinished npm timer reify 1751915846949
+18 silly unfinished npm timer reify:loadTrees 1751915846950
+19 silly unfinished npm timer idealTree:init 1751915846951
+20 verbose cwd /home/container
+21 verbose os Linux 6.8.0-1026-oracle
+22 verbose node v24.3.0
+23 verbose npm  v11.4.2
+24 verbose exit 1
+25 verbose code 1
+26 error A complete log of this run can be found in: /home/container/.npm/_logs/2025-07-07T19_17_25_844Z-debug-0.log

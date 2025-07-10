@@ -1,5 +1,7 @@
 {
-  "buy": 1350.23,
-  "sell": 1899.07,
-  "lastUpdate": 1747371257726
+  "buy": 0.35,
+  "sell": 300.93,
+  "lastUpdate": 1752147439000,
+  "previousBuy": 0.36,
+  "previousSell": 312.63
 }

@@ -1,180 +1,295 @@
 require('./soAuto');
 
 const { Client, GatewayIntentBits, Partials } = require('discord.js');
+
 const fs = require('fs');
+
 const path = require('path');
+
 const config = require('./config.json');
+
 const commandHandler = require('./utils/commandHandler');
+
 const eventHandler = require('./utils/eventHandler');
+
 const memoryOptimizer = require('./utils/memoryOptimizer');
 
 const botInstances = new Map();
 
-// ==== TỰ ĐỌC FILE .env (KHÔNG DÙNG dotenv) ====
+// ==== ĐỌC FILE .env ====
+
 function loadEnvFile() {
+
     const envData = {};
+
     if (fs.existsSync('.env')) {
-        const lines = fs.readFileSync('.env', 'utf8').split('\n');
+
+        const lines = fs.readFileSync('.env', 'utf8').split(/\r?\n/);
+
         for (const line of lines) {
-            if (!line.trim() || line.startsWith('#')) continue;
-            const [key, ...val] = line.split('=');
+
+            const trimmed = line.trim();
+
+            if (!trimmed || trimmed.startsWith('#')) continue;
+
+            const [key, ...val] = trimmed.split('=');
+
             envData[key.trim()] = val.join('=').trim();
+
         }
+
     }
+
     return envData;
+
 }
 
-// ==== TẠO BOT CHÍNH HOẶC PHỤ ====
+// ==== GHI VÀO .env ====
+
+function writeEnvKey(key, value) {
+
+    const current = fs.existsSync('.env') ? fs.readFileSync('.env', 'utf8') : '';
+
+    const exists = current.includes(`${key}=`);
+
+    if (!exists) {
+
+        fs.appendFileSync('.env', `\n${key}=${value}`);
+
+    }
+
+}
+
+// ==== TẠO BOT ====
+
 function createBotInstance(token, isMain = false) {
+
+    if (botInstances.has(token)) {
+
+        console.log(`⚠️ Bot với token này đã được khởi chạy.`);
+
+        return;
+
+    }
+
     const bot = new Client({
+
         intents: [
+
             GatewayIntentBits.Guilds,
+
             GatewayIntentBits.GuildMessages,
+
             GatewayIntentBits.MessageContent,
+
             GatewayIntentBits.GuildMembers,
+
         ],
+
         partials: [Partials.Channel, Partials.Message, Partials.GuildMember, Partials.User],
+
     });
 
     commandHandler.init(bot);
+
     eventHandler.init(bot);
+
     memoryOptimizer.optimize(bot);
 
     bot.on('messageCreate', async (message) => {
+
         if (!message.guild || message.author.bot) return;
 
         const args = message.content.trim().split(/\s+/);
+
         const command = args.shift().toLowerCase();
 
-        // ==== !addbot - Ai cũng dùng được ====
         if (command === '!addbot') {
+
             const newToken = args[0];
+
             const authorId = message.author.id;
 
             if (!newToken) return message.reply('⚠️ Vui lòng cung cấp token bot phụ.');
 
             const envKey = `BOT_TOKEN_${authorId}`;
-            const currentEnv = fs.existsSync('.env') ? fs.readFileSync('.env', 'utf8') : '';
-            const envLines = currentEnv.split('\n');
 
-            // ==== Giới hạn tối đa 10 bot phụ đang hoạt động ====
-            const currentBotCount = Array.from(botInstances.keys()).filter(key => key !== mainToken).length;
+            const currentBotCount = Array.from(botInstances.keys()).filter(key => key !== config.token).length;
+
             if (currentBotCount >= 10) {
-                return message.reply('🚫 Đã đạt giới hạn 10 bot phụ đang hoạt động. Không thể thêm bot mới.');
+
+                return message.reply('🚫 Đã đạt giới hạn 10 bot phụ.');
+
             }
 
-            // ==== Mỗi người chỉ được có 1 bot phụ ====
-            const hasExistingBot = envLines.some(line => line.trim().startsWith(`BOT_TOKEN_${authorId}=`));
-            if (hasExistingBot) {
-                return message.reply('❌ Bạn chỉ được thêm 1 bot phụ duy nhất.');
+            if (loadEnvFile()[envKey]) {
+
+                return message.reply('❌ Bạn chỉ được thêm 1 bot phụ.');
+
             }
 
-            // ==== Ghi token mới vào .env ====
-            fs.appendFileSync('.env', `\n${envKey}=${newToken}`);
+            writeEnvKey(envKey, newToken);
 
-            // ==== Thêm vào admin nếu chưa có ====
             if (!config.admins) config.admins = [];
+
             if (!config.admins.includes(authorId)) {
+
                 config.admins.push(authorId);
+
                 fs.writeFileSync('./config.json', JSON.stringify(config, null, 4));
-                console.log(`👑 Đã thêm ${authorId} vào danh sách admin.`);
+
+                console.log(`👑 Thêm admin: ${authorId}`);
+
             }
 
-            message.reply(`✅ Bot phụ của bạn đã được thêm và sẽ khởi chạy trong vài giây.`);
+            message.reply('✅ Bot phụ đã được thêm. Đang khởi động...');
 
-            setTimeout(() => {
-                createBotInstance(newToken, false);
-            }, 1000);
+            setTimeout(() => createBotInstance(newToken), 1000);
 
             return;
+
         }
 
-        // ==== !restart - CHỈ ADMIN ====
         if (command === '!restart') {
-            const authorId = message.author.id;
-            const allowedUsers = config.admins || [];
 
-            if (!allowedUsers.includes(authorId)) {
-                return message.reply('❌ Bạn không có quyền khởi động lại bot.');
+            const authorId = message.author.id;
+
+            if (!config.admins.includes(authorId)) {
+
+                return message.reply('❌ Bạn không có quyền.');
+
             }
 
-            message.reply('🔁 Đang khởi động lại...');
+            message.reply('🔁 Restart bot...');
+
             process.exit(0);
+
         }
+
     });
 
     bot.login(token).then(() => {
-        console.log(`🤖 Đã đăng nhập: ${bot.user.tag}`);
+
+        console.log(`🤖 Bot đăng nhập: ${bot.user.tag}`);
+
         memoryOptimizer.reportMemoryUsage();
 
         setInterval(() => {
-            memoryOptimizer.reportMemoryUsage();
-            memoryOptimizer.runGarbageCollection();
-        }, 3600000);
 
-    }).catch(console.error);
+            memoryOptimizer.reportMemoryUsage();
+
+            memoryOptimizer.runGarbageCollection();
+
+        }, 60 * 60 * 1000); // 1 tiếng
+
+    }).catch(err => {
+
+        console.error(`❌ Lỗi đăng nhập bot:`, err.message);
+
+    });
 
     botInstances.set(token, bot);
+
 }
 
-// ==== KHỞI CHẠY BOT CHÍNH ====
-const mainToken = config.token;
-createBotInstance(mainToken, true);
+// ==== KHỞI ĐỘNG BOT CHÍNH ====
 
-// ==== KHỞI ĐỘNG BOT PHỤ TỪ .env ====
+createBotInstance(config.token, true);
+
+// ==== KHỞI ĐỘNG BOT PHỤ ====
+
 const envData = loadEnvFile();
+
 for (const key in envData) {
+
     if (key.startsWith('BOT_TOKEN_')) {
-        const token = envData[key];
-        createBotInstance(token, false);
+
+        createBotInstance(envData[key]);
+
     }
+
 }
 
-// ==== HOT RELOAD LỆNH ====
-const commandsPath = path.join(__dirname, 'modules', 'commands');
-fs.watch(commandsPath, (eventType, filename) => {
-    if (!filename) return;
+// ==== HOT RELOAD COMMANDS ====
 
-    const commandPath = path.join(commandsPath, filename);
+const commandsPath = path.join(__dirname, 'modules', 'commands');
+
+fs.watch(commandsPath, (eventType, filename) => {
+
+    if (!filename.endsWith('.js')) return;
+
+    const filePath = path.join(commandsPath, filename);
+
     try {
-        if (fs.existsSync(commandPath)) {
-            delete require.cache[require.resolve(commandPath)];
-            const command = require(commandPath);
+
+        delete require.cache[require.resolve(filePath)];
+
+        const command = require(filePath);
+
+        if (eventType === 'rename' && !fs.existsSync(filePath)) {
+
+            commandHandler.unregisterCommand(command.name);
+
+            console.log(`❌ Xoá lệnh: ${command.name}`);
+
+        } else {
+
             commandHandler.registerCommand(command.name, command);
-            console.log(`🔁 Reload command: ${command.name}`);
-        } else if (eventType === 'rename') {
-            const commandName = filename.replace('.js', '');
-            commandHandler.unregisterCommand(commandName);
-            console.log(`❌ Unregistered command: ${commandName}`);
+
+            console.log(`🔁 Reload lệnh: ${command.name}`);
+
         }
-    } catch (error) {
-        console.error(`⚠️ Lỗi khi xử lý file lệnh: ${filename}`, error);
+
+    } catch (e) {
+
+        console.error(`⚠️ Lỗi reload lệnh ${filename}`, e);
+
     }
+
 });
 
 // ==== HOT RELOAD TIỆN ÍCH ====
+
 const utilitiesPath = path.join(__dirname, 'modules', 'utilities');
+
 fs.watch(utilitiesPath, (eventType, filename) => {
+
     if (!filename) return;
 
-    const utilityPath = path.join(utilitiesPath, filename);
+    const filePath = path.join(utilitiesPath, filename);
+
     try {
-        if (fs.existsSync(utilityPath)) {
-            delete require.cache[require.resolve(utilityPath)];
-            eventHandler.loadEvents();
-            console.log(`🔁 Reload tiện ích: ${filename}`);
-        }
-    } catch (error) {
-        console.error(`⚠️ Lỗi khi xử lý tiện ích: ${filename}`, error);
+
+        delete require.cache[require.resolve(filePath)];
+
+        eventHandler.loadEvents(); // Có thể cần thay đổi logic này nếu sự kiện theo bot
+
+        console.log(`🔁 Reload tiện ích: ${filename}`);
+
+    } catch (e) {
+
+        console.error(`⚠️ Lỗi reload tiện ích ${filename}`, e);
+
     }
+
 });
 
 // ==== TẮT BOT ====
+
 process.on('SIGINT', () => {
-    console.log('🛑 Đang tắt bot...');
-    botInstances.forEach(bot => bot.destroy());
+
+    console.log('🛑 Tắt bot...');
+
+    for (const bot of botInstances.values()) {
+
+        bot.destroy();
+
+    }
+
     process.exit(0);
+
 });
 
 process.on('unhandledRejection', console.error);
+
 process.on('uncaughtException', console.error);

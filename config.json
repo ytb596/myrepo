@@ -1,15 +1,17 @@
 {
-  "token":"MTM4MjMxNDQ1NTg5MDc.......",
-  "prefix": "!",
-  "ownerId": "ID_Discord_Cua_Ban",
-   "admins": [],
-  "welcomeChannelId": "ID",
-  "goodbyeChannelId": "ID",
-  "memoryLimit": 256,
-  "cacheSettings": {
-    "messageCacheMaxSize": 50,
-    "messageCacheLifetime": 300,
-    "messageSweepInterval": 600
-  },
-  "encodedToken": null
+    "token": "MTM3MjU4NjU2NTc1ODM1MzU2MQ.GqQwvH.Y704h-_4f0EZ4m-2BqjuBjmS183BJghUbGjmbM",
+    "prefix": "!",
+    "ownerId": "ID_Discord_Cua_Ban",
+    "admins": [
+        "1371358649771102241"
+    ],
+    "welcomeChannelId": "ID",
+    "goodbyeChannelId": "ID",
+    "memoryLimit": 256,
+    "cacheSettings": {
+        "messageCacheMaxSize": 50,
+        "messageCacheLifetime": 300,
+        "messageSweepInterval": 600
+    },
+    "encodedToken": null
 }
